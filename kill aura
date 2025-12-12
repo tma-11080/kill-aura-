@@ -1,95 +1,146 @@
-local function IsEntityAlive(entity)
-		if not entity then return false end
-		local humanoid = entity:FindFirstChild("Humanoid")
-		return humanoid and humanoid.Health > 0
-	end
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-	local function GetEnemiesInRange(character, range)
-		local enemies = game:GetService("Workspace").Enemies:GetChildren()
-		local players = game:GetService("Players"):GetPlayers()
-		local targets = {}
-		local playerPos = character:GetPivot().Position
-		for _, enemy in ipairs(enemies) do
-			local rootPart = enemy:FindFirstChild("HumanoidRootPart")
-			if rootPart and IsEntityAlive(enemy) then
-				local distance = (rootPart.Position - playerPos).Magnitude
-				if distance <= range then
-					table.insert(targets, enemy)
-				end
-			end
-		end
-		for _, otherPlayer in ipairs(players) do
-			if otherPlayer ~= player and otherPlayer.Character then
-				local rootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
-				if rootPart and IsEntityAlive(otherPlayer.Character) then
-					local distance = (rootPart.Position - playerPos).Magnitude
-					if distance <= range then
-						table.insert(targets, otherPlayer.Character)
-						return targets
-					end
-				end
-			end
-		end
-		return targets
-	end
+local Window = Rayfield:CreateWindow({
+    Name = "Blox Fruits Hub | Rayfield",
+    LoadingTitle = "main title！！",
+    LoadingSubtitle = "subtitle！",
+    ConfigurationSaving = { Enabled = false },
+    Discord = { Enabled = false },
+    KeySystem = false
+})
 
-	local function attackNoCoolDown()
-		local character = player.Character
-		local hrp = character:FindFirstChild("HumanoidRootPart")
-		if not hrp then return end
-		local equippedWeapon
-		for _, item in ipairs(character:GetChildren()) do
-			if item:IsA("Tool") then
-				equippedWeapon = item
-				break
-			end
-		end
-		if not equippedWeapon then return end
-		if hrp:FindFirstChild("Buddha") and superRange then
-			attackRange = 150
-		else
-			attackRange = 50
-		end
-		local enemiesInRange = GetEnemiesInRange(character, attackRange)
-		if equippedWeapon:FindFirstChild("LeftClickRemote") then
-			local attackCount = 1  
-			for _, enemy in ipairs(enemiesInRange) do
-				local rootPart = enemy:FindFirstChild("HumanoidRootPart")
-				if rootPart then
-					local direction = (rootPart.Position - character:GetPivot().Position).Unit
-					equippedWeapon.LeftClickRemote:FireServer(direction, attackCount)
-					attackCount = attackCount + 1
-				end
-			end
-		else
-			local targets, mainTarget = {}, nil
-			for _, enemy in ipairs(enemiesInRange) do
-				if not enemy:GetAttribute("IsBoat") then
-					local head = enemy:FindFirstChild("Head")
-					if head then
-						table.insert(targets, { enemy, head })
-						mainTarget = head
-					end
-				end
-			end
-			if mainTarget then
-				local attackEvent = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterAttack")
-				local hitEvent = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterHit")
-				pcall(function()
-					attackEvent:FireServer(0.05)
-					hitEvent:FireServer(mainTarget, targets)
-				end)
-			end
-		end
-	end
-	local fastAttack = false
-	task.spawn(function()
-		while task.wait(0.1) do
-			if fastAttack then
-				attackNoCoolDown()
-			end
-		end
-	end)
-	local fastAttackSwitch =createSwitch(bloxfruitsRightScroll,"Fast Attack", false,function(state)
-		fastAttack = state
-	end)
+local killTab = Window:CreateTab("kill aura", 4483362458)
+
+killTab:CreateButton({
+    Name = "kill aura (auto attack)",
+    Callback = function()
+
+        -- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+        --   以下：君が渡したコードそのまま（必要部分のみ最小修正）
+        -- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+        local player = game.Players.LocalPlayer
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+        local function IsEntityAlive(entity)
+            if not entity then return false end
+            local humanoid = entity:FindFirstChild("Humanoid")
+            return humanoid and humanoid.Health > 0
+        end
+
+        local function GetEnemiesInRange(character, range)
+            local enemies = game:GetService("Workspace").Enemies:GetChildren()
+            local players = game:GetService("Players"):GetPlayers()
+            local targets = {}
+            local playerPos = character:GetPivot().Position
+
+            for _, enemy in ipairs(enemies) do
+                local rootPart = enemy:FindFirstChild("HumanoidRootPart")
+                if rootPart and IsEntityAlive(enemy) then
+                    local distance = (rootPart.Position - playerPos).Magnitude
+                    if distance <= range then
+                        table.insert(targets, enemy)
+                    end
+                end
+            end
+
+            for _, otherPlayer in ipairs(players) do
+                if otherPlayer ~= player and otherPlayer.Character then
+                    local rootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if rootPart and IsEntityAlive(otherPlayer.Character) then
+                        local distance = (rootPart.Position - playerPos).Magnitude
+                        if distance <= range then
+                            table.insert(targets, otherPlayer.Character)
+                            return targets
+                        end
+                    end
+                end
+            end
+
+            return targets
+        end
+
+        local function attackNoCoolDown()
+            local character = player.Character
+            local hrp = character and character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            local equippedWeapon
+            for _, item in ipairs(character:GetChildren()) do
+                if item:IsA("Tool") then
+                    equippedWeapon = item
+                    break
+                end
+            end
+            if not equippedWeapon then return end
+
+            if hrp:FindFirstChild("Buddha") and superRange then
+                attackRange = 150
+            else
+                attackRange = 50
+            end
+
+            local enemiesInRange = GetEnemiesInRange(character, attackRange)
+
+            if equippedWeapon:FindFirstChild("LeftClickRemote") then
+                local attackCount = 1
+                for _, enemy in ipairs(enemiesInRange) do
+                    local rootPart = enemy:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        local direction = (rootPart.Position - character:GetPivot().Position).Unit
+                        equippedWeapon.LeftClickRemote:FireServer(direction, attackCount)
+                        attackCount = attackCount + 1
+                    end
+                end
+            else
+                local targets, mainTarget = {}, nil
+
+                for _, enemy in ipairs(enemiesInRange) do
+                    if not enemy:GetAttribute("IsBoat") then
+                        local head = enemy:FindFirstChild("Head")
+                        if head then
+                            table.insert(targets, { enemy, head })
+                            mainTarget = head
+                        end
+                    end
+                end
+
+                if mainTarget then
+                    local attackEvent = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterAttack")
+                    local hitEvent = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterHit")
+
+                    pcall(function()
+                        attackEvent:FireServer(0.05)
+                        hitEvent:FireServer(mainTarget, targets)
+                    end)
+                end
+
+            end
+        end
+
+        -- ON/OFF 状態
+        local fastAttack = false
+
+        task.spawn(function()
+            while task.wait(0.05) do
+                if fastAttack then
+                    attackNoCoolDown()
+                end
+            end
+        end)
+
+        -- Rayfield の Toggle（Switch）
+        killTab:CreateToggle({
+            Name = "Fast Attack (Kill Aura)",
+            CurrentValue = false,
+            Callback = function(state)
+                fastAttack = state
+            end,
+        })
+
+        -- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+        --         ここまで君のコード構成を保持して組み込み
+        -- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+    end,
+})
